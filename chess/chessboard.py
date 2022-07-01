@@ -27,16 +27,13 @@ class SquareStatus:
 
 class ChessBoard(collections.abc.MutableMapping):
     def __setitem__(self, k: Coord, v: SquareStatus) -> None:
-        if self.are_coords_valid(coord=k):
-            self._board[k.row][k.column] = v
+        self._board[k.row][k.column] = v
 
     def __delitem__(self, v: SquareStatus) -> None:
         raise NotImplementedError()
 
     def __getitem__(self, k: Coord) -> SquareStatus:
-        if self.are_coords_valid(coord=k):
-            return self._board[k.row][k.column]
-        raise AttributeError()
+        return self._board[k.row][k.column]
 
     def __len__(self) -> int:
         return self._n * self._n
@@ -48,6 +45,7 @@ class ChessBoard(collections.abc.MutableMapping):
         self._board: List[List[SquareStatus]] = [[SquareStatus(SquareStatusEnum.EMPTY, 0) for _ in range(n)] for _ in
                                                  range(n)]
         self._n = n
+        self._coords = [Coord(row, column) for row in range(n) for column in range(n)]
 
     def pretty_print(self):
         if LOGGER.getEffectiveLevel() <= 30:
@@ -57,13 +55,18 @@ class ChessBoard(collections.abc.MutableMapping):
             print()
 
     def iterate_squares(self, start_position: Coord) -> Generator[Coord, None, None]:
-        for r in range(start_position.row, self._n):
-            if r == start_position.row:
-                for c in range(start_position.column, self._n):
-                    yield Coord(row=r, column=c)
-            else:
-                for c in range(self._n):
-                    yield Coord(row=r, column=c)
+        order = start_position.row*self._n + start_position.column
+        return self._coords[order:]
+        # return (c for c in self._coords if
+        #  (c.row == start_position.row and c.column >= start_position.column) or c.row > start_position.row)
+
+        # for r in range(start_position.row, self._n):
+        #     if r == start_position.row:
+        #         for c in range(start_position.column, self._n):
+        #             yield Coord(row=r, column=c)
+        #     else:
+        #         for c in range(self._n):
+        #             yield Coord(row=r, column=c)
 
     def are_coords_valid(self, coord: Coord):
         return 0 <= coord.row < self._n and 0 <= coord.column < self._n
