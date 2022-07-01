@@ -11,4 +11,4 @@ class Knight(PieceBase):
     name = 'knight'
 
     def block(self):
-        return self.blocked
+        return blocked

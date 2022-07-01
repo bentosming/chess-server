@@ -9,7 +9,6 @@ from chess.pieces.piece_base import PieceBase
 
 LOGGER = logging.getLogger(__name__)
 
-
 class SquareStatusEnum(str, Enum):
     EMPTY = "E"
     OCC = "O"
@@ -24,6 +23,8 @@ class SquareStatus:
     def __repr__(self):
         return f"{self.status.value}{self.id}"
 
+
+EMPTY_SQUARE = SquareStatus(SquareStatusEnum.EMPTY, 0)
 
 class ChessBoard(collections.abc.MutableMapping):
     def __setitem__(self, k: Coord, v: SquareStatus) -> None:
@@ -105,5 +106,5 @@ class ChessBoard(collections.abc.MutableMapping):
     def undo(self, squares: List[Coord]):
         for coord in squares:
             LOGGER.debug(f"Undoing: {coord}")
-            self[coord] = SquareStatus(SquareStatusEnum.EMPTY, 0)
+            self[coord] = EMPTY_SQUARE
             # self.pretty_print()

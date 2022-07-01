@@ -49,15 +49,17 @@ solutions = [
 t = time.time()
 print(time.time())
 all_solutions = []
-for piece in ["bishop"]:
-    if piece == 'dummy':
-        continue
-    for i in range(1, 8):
+for piece in ["dummy"]:
+    # if piece == 'dummy':
+    #     continue
+    for i in range(1, 10):
         placements = PiecePlacer(i, piece).find_placements()
         all_solutions.append(Solution(piece, i, placements))
         print(f"{piece} {i}: {placements}")
+        print(time.time()-t)
         print(all_solutions)
 
 print(time.time()-t)
 #bishop range(1,7): 6.1
 #bishop range(1,8): 117, pak 94
+# knight 7: 8891854 # 373.5010368824005
