@@ -1,3 +1,4 @@
+import argparse
 import logging
 from typing import Type
 
@@ -68,3 +69,13 @@ class PiecePlacer:
 
     def print_board(self):
         self._chessboard.pretty_print()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-n', type=int, help="chess board size", required=True)
+    parser.add_argument('-p',  type=str, help="queen/dummy/bishop/rook/knight", required=True)
+
+    args = parser.parse_args()
+    print(PiecePlacer(args.n, args.p).find_placements())

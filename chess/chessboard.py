@@ -8,6 +8,8 @@ from chess.coord import Coord
 from chess.pieces.piece_base import PieceBase
 
 LOGGER = logging.getLogger(__name__)
+logging.basicConfig()
+LOGGER.setLevel('WARN')
 
 class SquareStatusEnum(str, Enum):
     EMPTY = "E"
@@ -49,7 +51,8 @@ class ChessBoard(collections.abc.MutableMapping):
         self._coords = [Coord(row, column) for row in range(n) for column in range(n)]
 
     def pretty_print(self):
-        if LOGGER.getEffectiveLevel() <= 30:
+        l = LOGGER.getEffectiveLevel()
+        if LOGGER.getEffectiveLevel() >= 30:
             return
         for row in self._board:
             print('   '.join([r.__repr__() for r in row]))
@@ -83,7 +86,7 @@ class ChessBoard(collections.abc.MutableMapping):
             return []
         self[piece.position] = SquareStatus(id=piece.id, status=SquareStatusEnum.OCC)
         changed.append(piece.position)
-
+        self.pretty_print()
         for direction in piece.block():
             for position in direction:
                 coord = position + piece.position
