@@ -11,6 +11,7 @@ LOGGER = logging.getLogger(__name__)
 logging.basicConfig()
 LOGGER.setLevel('WARN')
 
+
 class SquareStatusEnum(str, Enum):
     EMPTY = "E"
     OCC = "O"
@@ -27,6 +28,7 @@ class SquareStatus:
 
 
 EMPTY_SQUARE = SquareStatus(SquareStatusEnum.EMPTY, 0)
+
 
 class ChessBoard(collections.abc.MutableMapping):
     def __setitem__(self, k: Coord, v: SquareStatus) -> None:
@@ -51,28 +53,17 @@ class ChessBoard(collections.abc.MutableMapping):
         self._coords = [Coord(row, column) for row in range(n) for column in range(n)]
 
     def pretty_print(self):
-        l = LOGGER.getEffectiveLevel()
         if LOGGER.getEffectiveLevel() >= 30:
             return
         for row in self._board:
             print('   '.join([r.__repr__() for r in row]))
             print()
 
-    def iterate_squares(self, start_position: Coord) -> Generator[Coord, None, None]:
-        order = start_position.row*self._n + start_position.column
+    def iterate_squares(self, start_position: Coord) -> Iterator[Coord]:
+        order = start_position.row * self._n + start_position.column
         return self._coords[order:]
-        # return (c for c in self._coords if
-        #  (c.row == start_position.row and c.column >= start_position.column) or c.row > start_position.row)
 
-        # for r in range(start_position.row, self._n):
-        #     if r == start_position.row:
-        #         for c in range(start_position.column, self._n):
-        #             yield Coord(row=r, column=c)
-        #     else:
-        #         for c in range(self._n):
-        #             yield Coord(row=r, column=c)
-
-    def are_coords_valid(self, coord: Coord):
+    def _are_coords_valid(self, coord: Coord):
         return 0 <= coord.row < self._n and 0 <= coord.column < self._n
 
     def place_piece(self, piece: PieceBase) -> List[Coord]:
@@ -90,7 +81,7 @@ class ChessBoard(collections.abc.MutableMapping):
         for direction in piece.block():
             for position in direction:
                 coord = position + piece.position
-                if not self.are_coords_valid(coord):
+                if not self._are_coords_valid(coord):
                     break
                 if self[coord].status != SquareStatusEnum.EMPTY:
                     continue

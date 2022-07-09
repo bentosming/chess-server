@@ -9,8 +9,8 @@ GENERATOR_LIMIT = 20
 class PieceBase(abc.ABC):
     name: str
 
-    def __init__(self, id: int, min_valid_position: Coord):
-        self.id = id
+    def __init__(self, piece_id: int, min_valid_position: Coord):
+        self.id = piece_id
         self.position = min_valid_position
 
     @abc.abstractmethod
