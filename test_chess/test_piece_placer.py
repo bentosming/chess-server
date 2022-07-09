@@ -17,10 +17,6 @@ from chess.piece_placer import PiecePlacer
      ("queen", 3, 0),
      ("queen", 4, 2),
      ("queen", 5, 10),
-     # ("queen", 6, 4),
-     # ("queen", 7, 40),
-     # ("queen", 8, 92),
-     # ("queen", 9, 352),
      ("bishop", 1, 1),
      ("bishop", 2, 4),
      ("knight", 1, 1),
@@ -28,4 +24,5 @@ from chess.piece_placer import PiecePlacer
      ]
 )
 def test_find_placements(piece, n, expected):
+    # asserts final result
     assert PiecePlacer(n, piece).find_placements() == expected
