@@ -1,21 +1,26 @@
 import asyncio
 import os
 import sys
-from asyncio.windows_events import ProactorEventLoop
+if os.name == 'nt':
+    from asyncio.windows_events import ProactorEventLoop
 from dataclasses import dataclass
 
 from fastapi import FastAPI
 from pydantic import BaseModel
 from uvicorn import Config, Server
 
+# tested for windows, run by running this file with python
+
 app = FastAPI()
-asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+if os.name == 'nt':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 
 class ProactorServer(Server):
     def run(self, sockets=None):
-        loop = ProactorEventLoop()
-        asyncio.set_event_loop(loop)  # since this is the default in Python 3.10, explicit selection can also be omitted
+        if os.name == 'nt':
+            loop = ProactorEventLoop()
+            asyncio.set_event_loop(loop)
         asyncio.run(self.serve(sockets=sockets))
 
 

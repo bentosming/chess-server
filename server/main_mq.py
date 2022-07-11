@@ -1,5 +1,8 @@
 import asyncio
-from asyncio.windows_events import ProactorEventLoop
+import os
+
+if os.name == 'nt':
+    from asyncio.windows_events import ProactorEventLoop
 from dataclasses import dataclass
 from typing import Union
 
@@ -11,11 +14,13 @@ from uvicorn import Config, Server
 
 from chess_db import sa_tables
 from chess_db.main import engine, SessionLocal
-from chess_db.queries import get_task_by_n_and_piece
+from chess_db.queries import get_task_by_n_and_piece, get_task
 
 sa_tables.Base.metadata.create_all(bind=engine)
 app = FastAPI()
-asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
+if os.name == 'nt':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 
 # Dependency
@@ -29,8 +34,9 @@ def get_db():
 
 class ProactorServer(Server):
     def run(self, sockets=None):
-        loop = ProactorEventLoop()
-        asyncio.set_event_loop(loop)  # since this is the default in Python 3.10, explicit selection can also be omitted
+        if os.name == 'nt':
+            loop = ProactorEventLoop()
+            asyncio.set_event_loop(loop)
         asyncio.run(self.serve(sockets=sockets))
 
 
@@ -60,6 +66,13 @@ class PiecePlacementTaskBase(BaseModel):
     n: int
 
 
+class PiecePlacementTaskId(BaseModel):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
 class PiecePlacementTaskCreate(PiecePlacementTaskBase):
     pass
 
@@ -82,8 +95,8 @@ def create_db_task(db: Session, task: PiecePlacementTaskCreate):
     return db_task
 
 
-@app.post("/chessboard_piece_placer/", response_model=PiecePlacementTask)
-def create_task(task: PiecePlacementTaskCreate, db: Session = Depends(get_db)):
+@app.post("/chessboard_piece_placer/", response_model=PiecePlacementTaskId)
+def create_piece_placement_task(task: PiecePlacementTaskCreate, db: Session = Depends(get_db)):
     print(f"request to create {task}")
     db_task = get_task_by_n_and_piece(db, n=task.n, piece_type=task.piece)
     print(db_task)
@@ -91,7 +104,7 @@ def create_task(task: PiecePlacementTaskCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Task already registered")
 
     db_task = create_db_task(db=db, task=task)
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost', 5672))
+    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq', 5672))
     channel = connection.channel()
 
     channel.queue_declare(queue='piece_placer')
@@ -105,6 +118,14 @@ def create_task(task: PiecePlacementTaskCreate, db: Session = Depends(get_db)):
     return db_task
 
 
-config = Config(app=app, reload=True)
+@app.get("/chessboard_piece_placer/{task_id}", response_model=PiecePlacementTask)
+def read_user(task_id: int, db: Session = Depends(get_db)):
+    db_task = get_task(db, task_id=task_id)
+    if db_task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return db_task
+
+
+config = Config(app=app, reload=True, host="0.0.0.0")
 server = ProactorServer(config=config)
 server.run()

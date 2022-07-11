@@ -22,7 +22,7 @@ def get_db():
 
 
 def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq', 5672))
     channel = connection.channel()
 
     channel.queue_declare(queue='piece_placer')
@@ -35,7 +35,7 @@ def main():
         task.state = "processing"
         db.commit()
         task.solution = PiecePlacer(n=task.n, piece_type=task.piece).find_placements()
-        task.state = "ready"
+        task.state = "done"
         print(task)
         db.commit()
 
